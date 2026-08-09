@@ -165,6 +165,29 @@ export const PERMISSION_LO: Record<string, string>;
 export const DEFAULT_PERMISSIONS: ManifestPermissions;
 export function resolvePermissions(declared?: ManifestPermissions): ManifestPermissions;
 
+// ── 扩展点（纯数据声明，无 handler） ──
+
+export type ExtensionType = 'commands' | 'views' | 'panels' | 'editors' | 'services';
+export const EXTENSION_TYPES: ExtensionType[];
+
+export interface ExtensionPoint {
+  pluginId: string;
+  type: ExtensionType;
+  id: string;
+  title?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export function createExtensionPoint(def: {
+  pluginId: string;
+  type: ExtensionType;
+  id: string;
+  title?: string;
+  metadata?: Record<string, unknown>;
+}): ExtensionPoint;
+
+export function parseContributes(manifest: AgentManifest): ExtensionPoint[];
+
 // ── 上下文 ──
 
 export interface PluginSettings {

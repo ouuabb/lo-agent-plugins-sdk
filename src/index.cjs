@@ -40,6 +40,8 @@ const {
   PERMISSION_LO,
   resolvePermissions,
 } = require('./types.cjs');
+const { createExtensionPoint, EXTENSION_TYPES } = require('./extension-point.cjs');
+const { parseContributes } = require('./contributes.cjs');
 const { createPlugin } = require('./loadPlugin.cjs');
 const { Logger, ConsoleLogger, SilentLogger, fromHost } = require('./Logger.cjs');
 
@@ -73,6 +75,11 @@ module.exports = {
   DEFAULT_PERMISSIONS,
   PERMISSION_LO,
   resolvePermissions,
+
+  // 扩展点（纯数据声明）
+  createExtensionPoint,
+  EXTENSION_TYPES,
+  parseContributes,
 
   // 加载
   createPlugin,
