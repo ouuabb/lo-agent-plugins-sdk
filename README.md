@@ -58,23 +58,34 @@ module.exports = MyPlugin;
 ## 插件生命周期
 
 ```
-created → loaded → activated → enabled → disabled → deactivated → disposed
+installed → loaded → activated → enabled → disabled → deactivated → disposed
 ```
 
-宿主驱动;插件通常实现 `manifest()` + `activate(ctx)`,可选 `deactivate()`。
+由 SDK 的 `LIFECYCLE_STATES` / `LIFECYCLE_TRANSITIONS` / `canTransition` 定义，
+宿主驱动;插件通常实现 `manifest()` + `activate(ctx)`，可选 `deactivate()`。
 
 ## API 一览
 
 ```
 @lo/agent-plugins-sdk
-├── AgentPlugin            # 插件基类
-├── AgentPluginContext     # 运行时上下文(lo/events/logger/config)
-├── AgentEventEmitter      # 事件总线
-├── validateManifest       # manifest 校验
-├── createPlugin           # 插件类校验 + 实例化
+├── AgentPlugin              # 插件基类
+├── AgentPluginContext       # 运行时上下文(lo/events/logger/config)
+├── AgentEventEmitter        # 事件总线
+├── createLoFacade / LO_CAPABILITIES  # ctx.lo 接口契约(SDK 不实现,Host 注入)
+├── validateManifest         # manifest schema 校验(engines/contributes/permissions/config)
+├── createPlugin             # 插件类校验 + 实例化
+├── LIFECYCLE_STATES / LIFECYCLE_TRANSITIONS / canTransition  # 生命周期契约
+├── CAPABILITY_TYPES / PERMISSION_LO / DEFAULT_PERMISSIONS / resolvePermissions  # 能力/权限类型
+├── createExtensionPoint / EXTENSION_TYPES  # 扩展点声明(纯数据,无 handler)
+├── parseContributes         # 解析 manifest.contributes → 扩展点列表
 ├── Logger / ConsoleLogger / SilentLogger / fromHost
 └── SDK_VERSION
 ```
+
+## ctx.lo 契约面
+
+SDK 只定义接口契约（operations / relations / events / resources / health），
+不实现业务调用；实现由 lo-agent Host Adapter 注入。
 
 ## 开发
 
@@ -87,7 +98,7 @@ npm run format # Prettier
 
 ## 与相关 SDK 的关系
 
-- **`@lo/client`**:lo Core 的 HTTP 客户端,是插件的通讯底座
+- **`@lo/client`**:lo Core 的 HTTP 客户端,是插件的通讯底座（Host Adapter 内部使用，SDK 不触碰）
 - **`@lo/plugins-sdk`**:lo Core 的嵌入式插件契约(跑在核心进程内),与本 SDK 互补不冲突
 
 ## License
