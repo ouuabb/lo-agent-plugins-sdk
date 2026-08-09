@@ -14,6 +14,26 @@ export interface ManifestConfigSchema {
   };
 }
 
+export interface ManifestEngines {
+  agent?: string;
+  core?: string;
+}
+
+export interface ManifestContributes {
+  commands?: Array<{ id: string; title?: string; handler?: (...args: unknown[]) => unknown }>;
+  views?: Array<{ id: string; title?: string; type?: 'panel' | 'sidebar' | 'editor' }>;
+  panels?: Array<{ id: string; title?: string }>;
+  editors?: Array<{ id: string; title?: string; resourceType?: string }>;
+  services?: Array<{ id: string; expose?: string[] }>;
+}
+
+export interface ManifestPermissions {
+  lo?: string[];
+  storage?: boolean;
+  network?: boolean;
+  shell?: boolean;
+}
+
 export interface AgentManifest {
   id: string;
   name: string;
@@ -22,6 +42,10 @@ export interface AgentManifest {
   description?: string;
   author?: string;
   agentVersion?: string;
+  engines?: ManifestEngines;
+  activationEvents?: string[];
+  contributes?: ManifestContributes;
+  permissions?: ManifestPermissions;
   config?: ManifestConfigSchema;
 }
 
@@ -66,20 +90,80 @@ export class AgentEventEmitter {
   clear(): void;
 }
 
-// ── lo 能力门面 ──
+// ── lo 能力门面契约 ──
+// SDK 只定义契约，不实现；由 Host Adapter 注入实现。
+
+export interface OperationsFacade {
+  execute(type: string, params?: object, options?: object): Promise<unknown>;
+  list(query?: object): Promise<unknown>;
+  get(id: string): Promise<unknown>;
+  undo(id: string): Promise<unknown>;
+}
+
+export interface RelationsFacade {
+  list(query?: object): Promise<unknown>;
+  get(id: number | string): Promise<unknown>;
+  create(from: string, to: string, type?: string, metadata?: object): Promise<unknown>;
+  update(id: number | string, updates: object): Promise<unknown>;
+  remove(id: number | string): Promise<unknown>;
+}
+
+export interface EventsFacade {
+  subscribe(types: string | string[], handler: (event: unknown) => void): unknown;
+  history(query?: object): Promise<unknown>;
+}
+
+export interface ResourcesFacade {
+  list(query?: object): Promise<unknown>;
+  get(rid: string): Promise<unknown>;
+  search(q: string): Promise<unknown>;
+}
+
+export interface HealthFacade {
+  stats(): Promise<unknown>;
+}
 
 export interface LoFacade {
-  notes: unknown;
-  search: unknown;
-  schemas: unknown;
-  views: unknown;
-  workflows: unknown;
-  automations: unknown;
-  evolution: unknown;
-  sync: unknown;
-  admin: unknown;
-  health: unknown;
+  operations: OperationsFacade;
+  relations: RelationsFacade;
+  events: EventsFacade;
+  resources: ResourcesFacade;
+  health: HealthFacade;
 }
+
+export const LO_CAPABILITIES: Record<string, string[]>;
+
+export function createLoFacade(
+  impl?: Partial<LoFacade> | null,
+  meta?: { pluginId?: string },
+): LoFacade;
+
+// ── lifecycle ──
+
+export type LifecycleState =
+  | 'installed'
+  | 'loaded'
+  | 'activated'
+  | 'enabled'
+  | 'disabled'
+  | 'deactivated'
+  | 'disposed';
+
+export const LIFECYCLE_STATES: LifecycleState[];
+export const LIFECYCLE_TRANSITIONS: Record<LifecycleState, Set<LifecycleState>>;
+export const LIFECYCLE_STATE_SET: Set<LifecycleState>;
+export function canTransition(
+  from: string,
+  to: string,
+): { ok: true } | { ok: false; error: string };
+
+// ── capability / permission ──
+
+export const CAPABILITY_TYPES: string[];
+export const PERMISSION_LO_CAPABILITIES: string[];
+export const PERMISSION_LO: Record<string, string>;
+export const DEFAULT_PERMISSIONS: ManifestPermissions;
+export function resolvePermissions(declared?: ManifestPermissions): ManifestPermissions;
 
 // ── 上下文 ──
 
@@ -106,8 +190,6 @@ export class AgentPluginContext implements AgentPluginContextLike {
   readonly settings: PluginSettings | null;
   config(key?: string, defaultValue?: unknown): unknown;
 }
-
-export function createLoFacade(client: Record<string, unknown>): LoFacade;
 
 // ── 基类 ──
 

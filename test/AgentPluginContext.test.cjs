@@ -1,4 +1,4 @@
-const { AgentPluginContext, createLoFacade } = require('../src/AgentPluginContext.cjs');
+const { AgentPluginContext } = require('../src/AgentPluginContext.cjs');
 const AgentEventEmitter = require('../src/AgentEventEmitter.cjs');
 
 describe('AgentPluginContext', () => {
@@ -7,15 +7,15 @@ describe('AgentPluginContext', () => {
     expect(ctx.pluginId).toBe('my-plugin');
   });
 
-  it('config() 返回全部/单 key/默认值', () => {
-    const ctx = new AgentPluginContext({ config: { a: 1, b: 2 } });
+  it('config() 返回全部/单 key/默认值(基于 configValues)', () => {
+    const ctx = new AgentPluginContext({ configValues: { a: 1, b: 2 } });
     expect(ctx.config()).toEqual({ a: 1, b: 2 });
     expect(ctx.config('a')).toBe(1);
     expect(ctx.config('nope', 'def')).toBe('def');
     expect(ctx.config('nope')).toBeUndefined();
   });
 
-  it('未注入 config 时返回空对象', () => {
+  it('未注入 configValues 时返回空对象', () => {
     const ctx = new AgentPluginContext({});
     expect(ctx.config()).toEqual({});
   });
@@ -32,54 +32,36 @@ describe('AgentPluginContext', () => {
     expect(() => ctx.events.emit('a')).not.toThrow();
   });
 
-  it('lo 未注入时调用抛错', () => {
+  it('lo 未注入实现时调用抛错', () => {
     const ctx = new AgentPluginContext({});
-    expect(() => ctx.lo.notes.list()).toThrow(/lo 能力未注入/);
-    expect(() => ctx.lo.search.search('x')).toThrow(/lo 能力未注入/);
+    expect(() => ctx.lo.operations.execute('resource.update', {})).toThrow(/lo 能力实现未注入/);
+    expect(() => ctx.lo.health.stats()).toThrow(/lo 能力实现未注入/);
   });
 
-  it('注入 client 后 lo 门面透传命名空间', () => {
-    const client = {
-      notes: { list: jest.fn() },
-      search: { search: jest.fn() },
-      schemas: { list: jest.fn() },
-      views: {},
-      workflows: {},
-      automations: {},
-      evolution: {},
-      sync: {},
-      admin: {},
-      health: {},
-    };
-    const ctx = new AgentPluginContext({ client });
-    expect(ctx.lo.notes).toBe(client.notes);
-    expect(ctx.lo.search).toBe(client.search);
-    ctx.lo.notes.list();
-    expect(client.notes.list).toHaveBeenCalled();
+  it('注入 loImpl 后 ctx.lo 透传契约能力', () => {
+    const execute = jest.fn();
+    const stats = jest.fn();
+    const ctx = new AgentPluginContext({
+      loImpl: {
+        operations: { execute, list: jest.fn(), get: jest.fn(), undo: jest.fn() },
+        health: { stats },
+      },
+    });
+    ctx.lo.operations.execute('resource.update', { rid: 'r1' });
+    ctx.lo.health.stats();
+    expect(execute).toHaveBeenCalledWith('resource.update', { rid: 'r1' });
+    expect(stats).toHaveBeenCalled();
   });
-});
 
-describe('createLoFacade', () => {
-  it('只透传白名单命名空间', () => {
-    const client = {
-      notes: {},
-      search: {},
-      schemas: {},
-      views: {},
-      workflows: {},
-      automations: {},
-      evolution: {},
-      sync: {},
-      admin: {},
-      health: {},
-      request: jest.fn(),
-      _opts: { secret: true },
-    };
-    const facade = createLoFacade(client);
-    expect(facade.notes).toBe(client.notes);
-    expect(facade.health).toBe(client.health);
-    expect(facade.request).toBeUndefined();
-    expect(facade._opts).toBeUndefined();
+  it('loImpl 只透传契约命名空间，不透传未声明能力', () => {
+    const ctx = new AgentPluginContext({
+      loImpl: {
+        operations: { execute: jest.fn() },
+        secret: { hidden: jest.fn() }, // 未声明能力
+      },
+    });
+    expect(ctx.lo.secret).toBeUndefined();
+    expect(typeof ctx.lo.operations.execute).toBe('function');
   });
 });
 

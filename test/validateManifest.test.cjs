@@ -97,3 +97,46 @@ describe('patterns', () => {
     expect(SEMVER_PATTERN.test('0.1.0.1')).toBe(false);
   });
 });
+
+describe('manifest 扩展字段', () => {
+  const base = {
+    id: 'demo',
+    name: 'Demo',
+    version: '0.1.0',
+    main: 'index.cjs',
+  };
+
+  it('engines 合法', () => {
+    expect(validateManifest({ ...base, engines: { agent: '>=0.1.0' } }).ok).toBe(true);
+    expect(validateManifest({ ...base, engines: 'bad' }).ok).toBe(false);
+  });
+
+  it('activationEvents 必须是数组', () => {
+    expect(validateManifest({ ...base, activationEvents: ['onView:x'] }).ok).toBe(true);
+    expect(validateManifest({ ...base, activationEvents: 'bad' }).ok).toBe(false);
+  });
+
+  it('contributes 只允许已知类型', () => {
+    expect(
+      validateManifest({ ...base, contributes: { commands: [], views: [] } }).ok,
+    ).toBe(true);
+    const bad = validateManifest({ ...base, contributes: { unknownType: [] } });
+    expect(bad.ok).toBe(false);
+    expect(bad.errors.join()).toContain('unknownType');
+  });
+
+  it('permissions.lo 只允许已知能力', () => {
+    expect(
+      validateManifest({ ...base, permissions: { lo: ['operations.read', 'health.read'] } }).ok,
+    ).toBe(true);
+    const bad = validateManifest({ ...base, permissions: { lo: ['not-a-cap'] } });
+    expect(bad.ok).toBe(false);
+    expect(bad.errors.join()).toContain('not-a-cap');
+  });
+
+  it('permissions.storage/shell 必须是 boolean', () => {
+    expect(validateManifest({ ...base, permissions: { storage: true } }).ok).toBe(true);
+    expect(validateManifest({ ...base, permissions: { storage: 'yes' } }).ok).toBe(false);
+  });
+});
+
