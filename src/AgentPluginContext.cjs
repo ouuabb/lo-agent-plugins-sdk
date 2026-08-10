@@ -10,12 +10,14 @@
  *   3. 不透传 @lo/client 原始实例;统一经 ctx.lo 门面
  */
 const { createLoFacade } = require('./lo-facade.cjs');
+const { createExtensionsFacade } = require('./extensions-facade.cjs');
 
 class AgentPluginContext {
   /**
    * @param {object} [injections]
    * @param {string} [injections.pluginId]   — 当前插件 ID
    * @param {object} [injections.loImpl]     — Host Adapter 注入的 lo 能力实现
+   * @param {object} [injections.extensionsImpl] — Host 注入的能力注册实现(registerCommands 等)
    * @param {object} [injections.logger]     — Logger 实例
    * @param {object} [injections.configValues] — 插件配置值对象
    * @param {object} [injections.events]     — 事件总线(AgentEventEmitter)
@@ -24,6 +26,7 @@ class AgentPluginContext {
   constructor(injections = {}) {
     this._pluginId = injections.pluginId || null;
     this._loImpl = injections.loImpl || null;
+    this._extensionsImpl = injections.extensionsImpl || null;
     this._logger = injections.logger || null;
     this._configValues = injections.configValues || {};
     this._events = injections.events || null;
@@ -67,6 +70,14 @@ class AgentPluginContext {
    */
   get lo() {
     return createLoFacade(this._loImpl, { pluginId: this._pluginId });
+  }
+
+  /**
+   * 扩展点注册门面 —— 插件注册命令/视图等运行时能力。
+   * SDK 只定义契约;实现由 Host ExtensionRegistry 适配器注入。
+   */
+  get extensions() {
+    return createExtensionsFacade(this._extensionsImpl, { pluginId: this._pluginId });
   }
 }
 

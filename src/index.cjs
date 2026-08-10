@@ -19,6 +19,7 @@
 const AgentPlugin = require('./AgentPlugin.cjs');
 const { AgentPluginContext } = require('./AgentPluginContext.cjs');
 const { createLoFacade, LO_CAPABILITIES } = require('./lo-facade.cjs');
+const { createExtensionsFacade, EXTENSIONS_METHODS } = require('./extensions-facade.cjs');
 const AgentEventEmitter = require('./AgentEventEmitter.cjs');
 const {
   validateManifest,
@@ -55,6 +56,10 @@ module.exports = {
   // lo 能力门面契约
   createLoFacade,
   LO_CAPABILITIES,
+
+  // 扩展点注册门面契约
+  createExtensionsFacade,
+  EXTENSIONS_METHODS,
 
   // manifest
   validateManifest,

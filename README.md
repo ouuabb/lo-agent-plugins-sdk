@@ -69,9 +69,10 @@ installed → loaded → activated → enabled → disabled → deactivated → 
 ```
 @lo/agent-plugins-sdk
 ├── AgentPlugin              # 插件基类
-├── AgentPluginContext       # 运行时上下文(lo/events/logger/config)
+├── AgentPluginContext       # 运行时上下文(lo/extensions/events/logger/config)
 ├── AgentEventEmitter        # 事件总线
 ├── createLoFacade / LO_CAPABILITIES  # ctx.lo 接口契约(SDK 不实现,Host 注入)
+├── createExtensionsFacade / EXTENSIONS_METHODS  # ctx.extensions 注册契约(SDK 不实现,Host 注入)
 ├── validateManifest         # manifest schema 校验(engines/contributes/permissions/config)
 ├── createPlugin             # 插件类校验 + 实例化
 ├── LIFECYCLE_STATES / LIFECYCLE_TRANSITIONS / canTransition  # 生命周期契约
@@ -86,6 +87,22 @@ installed → loaded → activated → enabled → disabled → deactivated → 
 
 SDK 只定义接口契约（operations / relations / events / resources / health），
 不实现业务调用；实现由 lo-agent Host Adapter 注入。
+
+## ctx.extensions 契约面
+
+插件经 `ctx.extensions` 向宿主注册运行时能力（命令执行等）：
+
+```js
+await plugin.activate(ctx) {
+  ctx.extensions.registerCommands([
+    { id: 'demo.hello', title: 'Hello', handler: async (args, cmdCtx) => ({ message: 'hi' }) },
+  ]);
+}
+```
+
+SDK 只定义方法白名单（registerCommands / registerView / registerPanel /
+registerEditor / registerService），不持有 handler；实现由 lo-agent Host
+ExtensionRegistry 注入。宿主经 `PluginManager.executeCommand(id, args)` 调用命令。
 
 ## 开发
 

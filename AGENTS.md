@@ -33,6 +33,7 @@ src/
   AgentPlugin.cjs           # 插件基类(manifest/activate/生命周期)
   AgentPluginContext.cjs    # 运行时上下文(结构 + 注入点)
   lo-facade.cjs             # ctx.lo 接口契约(不实现,Host Adapter 注入实现)
+  extensions-facade.cjs     # ctx.extensions 接口契约(注册命令等运行时能力,Host 注入实现)
   manifest.cjs              # manifest schema 定义 + 校验
   lifecycle.cjs             # 生命周期状态枚举 + 转移表
   types.cjs                 # capability / permission 类型定义
@@ -61,12 +62,14 @@ scripts/
 
 ```
 Plugin → ctx.lo(契约) → Host Adapter(实现) → @lo/client → lo Core
+Plugin → ctx.extensions(契约) → Host ExtensionRegistry(实现) → 命令执行 Runtime
 ```
 
 - **SDK 不依赖 lo-agent**(无反向依赖)。
 - **SDK 不替代 @lo/client**(不 require、不封装 HTTP/协议)。
 - **SDK 不定义二次协议**(不新增 operations/events/relations 之外的方法)。
 - `ctx.lo` 只是插件侧接口契约,实现由 Host 注入。
+- `ctx.extensions` 只是能力注册契约,SDK 不持有 handler,实现由 Host 注入。
 
 ## 关键约定
 
@@ -74,6 +77,8 @@ Plugin → ctx.lo(契约) → Host Adapter(实现) → @lo/client → lo Core
 - 所有能力接口都要有 noop 默认实现,单元测试/未注入时不崩溃(参考 lo-plugins-sdk)。
 - `ctx.lo` 是**接口契约**:SDK 只定义命名空间与方法签名(operations/relations/events/
   resources/health),实现由 Host Adapter 注入;SDK 不实现业务调用。
+- `ctx.extensions` 是**能力注册契约**:SDK 只定义方法白名单(registerCommands/
+  registerView/...),SDK 不持有 handler,实现由 Host ExtensionRegistry 注入。
 - 事件命名沿用 lo 点号约定:`resource.created` 等;插件自定义事件用 `<pluginId>.<event>`。
 - 生命周期状态/转移表、manifest schema、capability/permission 类型由 SDK 定义,
   Host 按契约驱动。

@@ -138,6 +138,31 @@ export function createLoFacade(
   meta?: { pluginId?: string },
 ): LoFacade;
 
+// ── extensions 门面契约 ──
+// 插件经 ctx.extensions 向宿主注册运行时能力（命令/视图等）。
+// SDK 只定义契约，实现由 Host ExtensionRegistry 适配器注入。
+
+export interface CommandDef {
+  id: string;
+  title?: string;
+  handler: (args: unknown[], ctx: AgentPluginContextLike) => unknown;
+}
+
+export interface ExtensionsFacade {
+  registerCommands(defs: CommandDef[]): unknown[];
+  registerView(def: object): unknown;
+  registerPanel(def: object): unknown;
+  registerEditor(def: object): unknown;
+  registerService(def: object): unknown;
+}
+
+export const EXTENSIONS_METHODS: string[];
+
+export function createExtensionsFacade(
+  impl?: Partial<ExtensionsFacade> | null,
+  meta?: { pluginId?: string },
+): ExtensionsFacade;
+
 // ── lifecycle ──
 
 export type LifecycleState =
@@ -200,6 +225,7 @@ export interface AgentPluginContextLike {
   readonly logger: LoggerLike;
   readonly events: AgentEventEmitter;
   readonly lo: LoFacade;
+  readonly extensions: ExtensionsFacade;
   readonly settings: PluginSettings | null;
   config(key?: string, defaultValue?: unknown): unknown;
 }
@@ -210,6 +236,7 @@ export class AgentPluginContext implements AgentPluginContextLike {
   readonly logger: LoggerLike;
   readonly events: AgentEventEmitter;
   readonly lo: LoFacade;
+  readonly extensions: ExtensionsFacade;
   readonly settings: PluginSettings | null;
   config(key?: string, defaultValue?: unknown): unknown;
 }

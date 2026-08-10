@@ -2,7 +2,8 @@
  * extension-point.cjs —— 扩展点声明数据
  *
  * 扩展点是插件声明的**纯数据**（无 Function），用于 Host 注册/查询/管理。
- * 执行能力（命令执行、视图渲染等）由 lo-agent Runtime 后续阶段管理，本阶段不涉及。
+ * 可执行能力（命令执行等）经 `ctx.extensions.registerCommands` 运行时注册，
+ * 由 Host ExtensionRegistry 持有 handler；声明数据本身始终为纯数据。
  *
  * 结构：
  *   pluginId  — 来源插件 ID
