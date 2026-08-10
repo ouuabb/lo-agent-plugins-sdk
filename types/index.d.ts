@@ -150,9 +150,16 @@ export interface CommandDef {
   handler: (args: unknown[], ctx: AgentPluginContextLike) => unknown;
 }
 
+export interface ViewDef {
+  id: string;
+  title?: string;
+  type?: string;
+  render: (context: Record<string, unknown>, ctx: AgentPluginContextLike) => string | Promise<string>;
+}
+
 export interface ExtensionsFacade {
   registerCommands(defs: CommandDef[]): unknown[];
-  registerView(def: object): unknown;
+  registerView(defs: ViewDef[]): unknown[];
   registerPanel(def: object): unknown;
   registerEditor(def: object): unknown;
   registerService(def: object): unknown;
