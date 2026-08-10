@@ -133,9 +133,11 @@ export interface LoFacade {
 
 export const LO_CAPABILITIES: Record<string, string[]>;
 
+export const LO_PERMISSION_MAP: Record<string, Record<string, string>>;
+
 export function createLoFacade(
   impl?: Partial<LoFacade> | null,
-  meta?: { pluginId?: string },
+  meta?: { pluginId?: string; permissions?: ManifestPermissions },
 ): LoFacade;
 
 // ── extensions 门面契约 ──

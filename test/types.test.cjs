@@ -10,9 +10,15 @@ describe('types (capability/permission)', () => {
     expect(CAPABILITY_TYPES).toEqual(['commands', 'views', 'panels', 'editors', 'services']);
   });
 
-  it('DEFAULT_PERMISSIONS 最小权限', () => {
+  it('DEFAULT_PERMISSIONS 最小权限（只读）', () => {
     expect(DEFAULT_PERMISSIONS).toEqual({
-      lo: [],
+      lo: [
+        'operations.read',
+        'relations.read',
+        'events.read',
+        'resources.read',
+        'health.read',
+      ],
       storage: false,
       network: false,
       shell: false,

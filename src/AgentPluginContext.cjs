@@ -22,6 +22,7 @@ class AgentPluginContext {
    * @param {object} [injections.configValues] — 插件配置值对象
    * @param {object} [injections.events]     — 事件总线(AgentEventEmitter)
    * @param {object} [injections.settings]   — 插件持久化设置读写
+   * @param {object} [injections.permissions] — 插件权限(resolvePermissions 输出),用于 ctx.lo 白名单过滤
    */
   constructor(injections = {}) {
     this._pluginId = injections.pluginId || null;
@@ -31,6 +32,7 @@ class AgentPluginContext {
     this._configValues = injections.configValues || {};
     this._events = injections.events || null;
     this._settings = injections.settings || null;
+    this._permissions = injections.permissions || null;
   }
 
   /** 当前插件 ID */
@@ -67,9 +69,13 @@ class AgentPluginContext {
   /**
    * lo 能力门面 —— 插件侧接口契约。
    * SDK 只定义契约,不实现;实现由 Host Adapter 注入。
+   * 权限白名单:manifest.permissions.lo 决定可调用方法,未授权抛错。
    */
   get lo() {
-    return createLoFacade(this._loImpl, { pluginId: this._pluginId });
+    const meta = { pluginId: this._pluginId };
+    // 仅在注入 permissions 时才启用白名单过滤（向后兼容：未注入不限制）
+    if (this._permissions) meta.permissions = this._permissions;
+    return createLoFacade(this._loImpl, meta);
   }
 
   /**

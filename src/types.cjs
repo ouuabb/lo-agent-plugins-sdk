@@ -10,9 +10,18 @@
  */
 const CAPABILITY_TYPES = ['commands', 'views', 'panels', 'editors', 'services'];
 
-/** 默认权限（未声明时）——最小权限：只读 + 无存储/网络/shell */
+/**
+ * 默认权限（未声明时）——最小权限：只读 + 无存储/网络/shell
+ * 对齐 012 §8.2：插件默认只能读，写操作（operations.write 等）需显式声明。
+ */
 const DEFAULT_PERMISSIONS = {
-  lo: [],
+  lo: [
+    'operations.read',
+    'relations.read',
+    'events.read',
+    'resources.read',
+    'health.read',
+  ],
   storage: false,
   network: false,
   shell: false,

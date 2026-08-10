@@ -104,6 +104,29 @@ SDK 只定义方法白名单（registerCommands / registerView / registerPanel /
 registerEditor / registerService），不持有 handler；实现由 lo-agent Host
 ExtensionRegistry 注入。宿主经 `PluginManager.executeCommand(id, args)` 调用命令。
 
+## 权限模型
+
+插件经 `manifest.permissions` 声明可访问的 lo 能力；`ctx.lo` 门面按白名单过滤，
+未授权的 `ctx.lo` 方法调用会抛错（最小权限原则，对齐 012 §8）。
+
+```json
+{
+  "permissions": {
+    "lo": ["health.read", "operations.write"],
+    "storage": false,
+    "network": false,
+    "shell": false
+  }
+}
+```
+
+- **默认权限（未声明）**：只读 + 无存储/网络/shell。
+  即 `operations.read / relations.read / events.read / resources.read / health.read` 放行，
+  写操作（`operations.write` / `relations.write` 等）需显式声明。
+- 能力 → 权限映射见 `LO_PERMISSION_MAP`（SDK 导出）。
+- Host 在激活插件时经 `resolvePermissions(manifest.permissions)` 解析并注入
+  `ctx.lo`，未授权方法透传不达 `@lo/client`。
+
 ## 开发
 
 ```bash
