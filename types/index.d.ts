@@ -157,12 +157,31 @@ export interface ViewDef {
   render: (context: Record<string, unknown>, ctx: AgentPluginContextLike) => string | Promise<string>;
 }
 
+export type ServiceApi = Record<string, (...args: unknown[]) => unknown>;
+
+export interface ServiceDef {
+  id: string;
+  title?: string;
+  version?: string;
+  api: ServiceApi;
+}
+
+export interface AgentService {
+  id: string;
+  pluginId: string;
+  title?: string;
+  version?: string;
+  api: ServiceApi;
+}
+
 export interface ExtensionsFacade {
   registerCommands(defs: CommandDef[]): unknown[];
   registerView(defs: ViewDef[]): unknown[];
   registerPanel(def: object): unknown;
   registerEditor(def: object): unknown;
-  registerService(def: object): unknown;
+  registerService(def: ServiceDef): unknown;
+  getService(id: string): ServiceApi | null;
+  listServices(): Array<Omit<AgentService, 'api'>>;
 }
 
 export const EXTENSIONS_METHODS: string[];

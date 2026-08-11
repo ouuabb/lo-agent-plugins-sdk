@@ -1,7 +1,7 @@
 /**
  * extensions-facade.cjs —— ctx.extensions 接口契约
  *
- * 插件通过 ctx.extensions 向宿主注册运行时能力（命令/视图等）。
+ * 插件通过 ctx.extensions 向宿主注册运行时能力（命令/视图/服务等）。
  * SDK 只定义契约（方法白名单），实现由 lo-agent Host 注入
  * （映射到 Host ExtensionRegistry 的 registerCommands 等）。
  *
@@ -19,6 +19,8 @@ const EXTENSIONS_METHODS = [
   'registerPanel',
   'registerEditor',
   'registerService',
+  'getService',
+  'listServices',
 ];
 
 /**

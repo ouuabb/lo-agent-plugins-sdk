@@ -33,6 +33,8 @@ describe('extensions-facade', () => {
       'registerPanel',
       'registerEditor',
       'registerService',
+      'getService',
+      'listServices',
     ]);
   });
 
@@ -42,5 +44,28 @@ describe('extensions-facade', () => {
     facade.registerCommands([{ id: 'a', handler: () => {} }]);
     expect(reg).toHaveBeenCalled();
     expect(() => facade.registerView({})).toThrow(/未注入/);
+  });
+
+  it('服务能力：registerService/getService/listServices 经门面透传', () => {
+    const registerService = jest.fn();
+    const getService = jest.fn(() => ({ stats: () => 42 }));
+    const listServices = jest.fn(() => [{ id: 'a.svc', pluginId: 'a' }]);
+    const facade = createExtensionsFacade(
+      { registerService, getService, listServices },
+      { pluginId: 'demo' },
+    );
+    const def = { id: 'demo.health', title: '健康', api: { stats: async () => 42 } };
+    facade.registerService(def);
+    expect(registerService).toHaveBeenCalledWith(def);
+    expect(facade.getService('demo.health').stats()).toBe(42);
+    expect(facade.listServices()).toEqual([{ id: 'a.svc', pluginId: 'a' }]);
+    expect(listServices).toHaveBeenCalled();
+  });
+
+  it('服务能力未注入实现时抛错', () => {
+    const facade = createExtensionsFacade(null, { pluginId: 'p' });
+    expect(() => facade.registerService({ id: 'x', api: {} })).toThrow(/未注入/);
+    expect(() => facade.getService('x')).toThrow(/未注入/);
+    expect(() => facade.listServices()).toThrow(/未注入/);
   });
 });
