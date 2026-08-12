@@ -8,6 +8,7 @@
  *   id / name / version / main        —— 必填
  *   description / author              —— 可选元信息
  *   engines: { agent, core }          —— 版本约束
+ *   dependsOn: [...]                  —— 依赖插件 ID（激活顺序：提供者先于消费者）
  *   activationEvents: [...]           —— 延迟激活触发点
  *   contributes: { commands, views, panels, editors, services }
  *   permissions: { lo, storage, network, shell }
@@ -60,11 +61,25 @@ function validateManifest(manifest) {
     errors.push('manifest.engines 必须是对象({ agent?, core? })');
   }
 
-  if (
-    manifest.activationEvents !== undefined &&
+  if (manifest.activationEvents !== undefined &&
     !Array.isArray(manifest.activationEvents)
   ) {
     errors.push('manifest.activationEvents 必须是字符串数组');
+  }
+
+  if (manifest.dependsOn !== undefined) {
+    if (!Array.isArray(manifest.dependsOn)) {
+      errors.push('manifest.dependsOn 必须是字符串数组（依赖插件 ID 列表）');
+    } else {
+      for (const dep of manifest.dependsOn) {
+        if (typeof dep !== 'string' || !ID_PATTERN.test(dep)) {
+          errors.push(`manifest.dependsOn 含非法插件 ID "${dep}"（须为 kebab-case）`);
+        }
+        if (dep === manifest.id) {
+          errors.push(`manifest.dependsOn 不能依赖自身 (${dep})`);
+        }
+      }
+    }
   }
 
   if (manifest.contributes !== undefined) {

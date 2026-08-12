@@ -101,8 +101,28 @@ await plugin.activate(ctx) {
 ```
 
 SDK 只定义方法白名单（registerCommands / registerView / registerPanel /
-registerEditor / registerService），不持有 handler；实现由 lo-agent Host
-ExtensionRegistry 注入。宿主经 `PluginManager.executeCommand(id, args)` 调用命令。
+registerEditor / registerService / getService / listServices），不持有 handler；
+实现由 lo-agent Host ExtensionRegistry 注入。宿主经 `PluginManager.executeCommand(id, args)` 调用命令。
+插件经 `ctx.extensions.registerService([...])` 注册服务（含 api），其他插件经
+`ctx.extensions.getService(id)` / `listServices()` 消费。
+
+## 插件依赖与激活顺序
+
+插件可在 manifest 声明 `dependsOn`（依赖插件 ID 数组），约定**提供者先于消费者**激活：
+
+```json
+{
+  "id": "demo-consumer",
+  "name": "Demo Consumer",
+  "version": "0.1.0",
+  "main": "index.cjs",
+  "dependsOn": ["demo-hello"]
+}
+```
+
+- `dependsOn` 依赖不存在的插件会被忽略；依赖自身 / 非法 ID 在 manifest 校验时报错。
+- 宿主按依赖拓扑排序激活（提供者在前）；循环依赖无法定序时稳定兜底（按加载顺序）。
+- 消费者对 `getService` 返回值仍需判空（提供者可能未激活/被停用）。
 
 ## 权限模型
 

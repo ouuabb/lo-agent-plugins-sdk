@@ -116,6 +116,18 @@ describe('manifest 扩展字段', () => {
     expect(validateManifest({ ...base, activationEvents: 'bad' }).ok).toBe(false);
   });
 
+  it('dependsOn 必须是合法插件 ID 数组', () => {
+    expect(validateManifest({ ...base, dependsOn: ['demo-hello', 'epub-reader'] }).ok).toBe(true);
+    expect(validateManifest({ ...base, dependsOn: 'demo-hello' }).ok).toBe(false);
+    const bad = validateManifest({ ...base, dependsOn: ['demo hell', 1] });
+    expect(bad.ok).toBe(false);
+    expect(bad.errors.join()).toContain('dependsOn');
+    // 不能依赖自身
+    const self = validateManifest({ ...base, dependsOn: ['demo'] });
+    expect(self.ok).toBe(false);
+    expect(self.errors.join()).toContain('自身');
+  });
+
   it('contributes 只允许已知类型', () => {
     expect(
       validateManifest({ ...base, contributes: { commands: [], views: [] } }).ok,

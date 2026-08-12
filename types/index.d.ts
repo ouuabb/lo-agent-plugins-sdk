@@ -43,6 +43,7 @@ export interface AgentManifest {
   author?: string;
   agentVersion?: string;
   engines?: ManifestEngines;
+  dependsOn?: string[];
   activationEvents?: string[];
   contributes?: ManifestContributes;
   permissions?: ManifestPermissions;
