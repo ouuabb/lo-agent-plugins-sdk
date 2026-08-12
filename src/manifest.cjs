@@ -32,6 +32,100 @@ const PERMISSION_LO_CAPABILITIES = [
 ];
 
 /**
+ * manifestSchema —— Manifest 规范的机器可读描述
+ *
+ * 独立规范文档见 `docs/manifest-spec.md`。本对象与 validateManifest 同源
+ * （常量复用，避免规范与校验器漂移），供插件开发者 / 编排工具 / IDE
+ * 静态检查 manifest 时引用。
+ */
+const manifestSchema = {
+  $id: 'https://lo.dev/specs/agent-plugin-manifest',
+  title: 'lo-agent 插件 Manifest 规范',
+  version: '0.1.0',
+  required: [...REQUIRED_FIELDS],
+  idPattern: ID_PATTERN.toString(),
+  semanticVersion: SEMVER_PATTERN.toString(),
+  contributesTypes: [...CONTRIBUTE_TYPES],
+  permissionsLoValues: [...PERMISSION_LO_CAPABILITIES],
+  properties: {
+    id: {
+      type: 'string',
+      required: true,
+      pattern: ID_PATTERN.toString(),
+      description: '插件唯一 ID（kebab-case：小写字母/数字/中划线）',
+    },
+    name: { type: 'string', required: true, description: '插件显示名' },
+    version: {
+      type: 'string',
+      required: true,
+      pattern: SEMVER_PATTERN.toString(),
+      description: '语义化版本 x.y.z',
+    },
+    main: { type: 'string', required: true, description: '插件入口文件（相对插件目录）' },
+    description: { type: 'string', description: '插件说明' },
+    author: { type: 'string', description: '作者' },
+    agentVersion: { type: 'string', description: '兼容的 lo-agent 版本约束' },
+    engines: {
+      type: 'object',
+      description: '环境约束',
+      properties: {
+        agent: { type: 'string', description: 'lo-agent 版本约束' },
+        core: { type: 'string', description: 'lo Core 版本约束' },
+      },
+    },
+    dependsOn: {
+      type: 'array',
+      items: { type: 'string', pattern: ID_PATTERN.toString() },
+      description: '依赖插件 ID 列表（激活顺序：提供者先于消费者；不得依赖自身）',
+    },
+    activationEvents: {
+      type: 'array',
+      items: { type: 'string' },
+      description: '延迟激活触发点（如 onView:<id> / onCommand:<id>）',
+    },
+    contributes: {
+      type: 'object',
+      allowedTypes: [...CONTRIBUTE_TYPES],
+      description: '扩展点纯数据声明（handler/render/api 属运行时 ctx.extensions 注册）',
+      properties: {
+        commands: {
+          type: 'array',
+          items: { type: 'object', required: ['id'], properties: { id: { type: 'string' }, title: { type: 'string' } } },
+        },
+        views: {
+          type: 'array',
+          items: { type: 'object', required: ['id'], properties: { id: { type: 'string' }, title: { type: 'string' }, type: { type: 'string' } } },
+        },
+        panels: { type: 'array', items: { type: 'object', required: ['id'] } },
+        editors: { type: 'array', items: { type: 'object', required: ['id'] } },
+        services: {
+          type: 'array',
+          items: { type: 'object', required: ['id'], properties: { id: { type: 'string' }, title: { type: 'string' } } },
+        },
+      },
+    },
+    permissions: {
+      type: 'object',
+      description: '能力声明（最小权限：默认只读，无存储/网络/shell）',
+      properties: {
+        lo: {
+          type: 'array',
+          items: { type: 'string', allowedValues: [...PERMISSION_LO_CAPABILITIES] },
+          description: '允许的 @lo/client 能力（ctx.lo 白名单）',
+        },
+        storage: { type: 'boolean', description: '是否可访问插件私有存储目录' },
+        network: { type: 'boolean', description: '是否可发起网络请求（默认 false）' },
+        shell: { type: 'boolean', description: '是否可执行外部命令（默认 false）' },
+      },
+    },
+    config: {
+      type: 'object',
+      description: '配置 schema：key → { type, default?, description? }',
+    },
+  },
+};
+
+/**
  * 校验 manifest
  * @param {object} manifest
  * @returns {{ ok: true, manifest } | { ok: false, errors: string[] }}
@@ -140,6 +234,7 @@ function validateManifest(manifest) {
 
 module.exports = {
   validateManifest,
+  manifestSchema,
   REQUIRED_FIELDS,
   ID_PATTERN,
   SEMVER_PATTERN,

@@ -36,7 +36,7 @@ src/
   AgentPluginContext.cjs    # 运行时上下文(结构 + 注入点)
   lo-facade.cjs             # ctx.lo 接口契约(不实现,Host Adapter 注入实现)
   extensions-facade.cjs     # ctx.extensions 接口契约(注册命令等运行时能力,Host 注入实现)
-  manifest.cjs              # manifest schema 定义 + 校验
+  manifest.cjs              # manifest schema 定义 + 校验（导出 manifestSchema 规范描述）
   lifecycle.cjs             # 生命周期状态枚举 + 转移表
   types.cjs                 # capability / permission 类型定义
   AgentEventEmitter.cjs     # 事件总线(on/off/once/emit/emitAsync)
@@ -55,7 +55,8 @@ test/
 types/
   index.d.ts  # 类型声明(package.json types 字段指向)
 docs/
-  index.md    # 概览文档
+  index.md        # 概览文档
+  manifest-spec.md  # Manifest 独立规范（013 Phase A-4，与 manifestSchema 同源）
 scripts/
   docs-check.cjs  # docs:build 占位校验
 ```

@@ -5,9 +5,20 @@
  */
 const {
   validateManifest,
+  manifestSchema,
   REQUIRED_FIELDS,
   ID_PATTERN,
   SEMVER_PATTERN,
+  CONTRIBUTE_TYPES,
+  PERMISSION_LO_CAPABILITIES,
 } = require('./manifest.cjs');
 
-module.exports = { validateManifest, REQUIRED_FIELDS, ID_PATTERN, SEMVER_PATTERN };
+module.exports = {
+  validateManifest,
+  manifestSchema,
+  REQUIRED_FIELDS,
+  ID_PATTERN,
+  SEMVER_PATTERN,
+  CONTRIBUTE_TYPES,
+  PERMISSION_LO_CAPABILITIES,
+};

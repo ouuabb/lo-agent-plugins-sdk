@@ -12,6 +12,10 @@ lo-agent 插件开发工具包 —— 让插件**直接运行在 lo-agent 内**,
 `@lo/agent-plugins-sdk` 定义插件契约(基类、上下文、事件、manifest),
 `@lo/client` 提供通讯能力,两者配合使用。
 
+**Manifest 规范**:插件 `plugin.json` 的完整契约见
+[`manifest-spec.md`](./manifest-spec.md)(必填字段 / dependsOn / contributes /
+permissions / config / 完整示例)。
+
 ## 插件生命周期
 
 ```

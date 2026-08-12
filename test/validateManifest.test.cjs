@@ -1,8 +1,11 @@
 const {
   validateManifest,
+  manifestSchema,
   REQUIRED_FIELDS,
   ID_PATTERN,
   SEMVER_PATTERN,
+  CONTRIBUTE_TYPES,
+  PERMISSION_LO_CAPABILITIES,
 } = require('../src/validateManifest.cjs');
 
 describe('validateManifest', () => {
@@ -77,6 +80,37 @@ describe('validateManifest', () => {
       config: 'nope',
     });
     expect(result.ok).toBe(false);
+  });
+});
+
+describe('manifestSchema（独立规范描述，与校验器同源）', () => {
+  it('必须字段与 REQUIRED_FIELDS 一致', () => {
+    expect(manifestSchema.required).toEqual(REQUIRED_FIELDS);
+    for (const field of REQUIRED_FIELDS) {
+      expect(manifestSchema.properties[field].required).toBe(true);
+    }
+  });
+
+  it('正则描述与 ID/版本校验器一致', () => {
+    expect(manifestSchema.idPattern).toBe(ID_PATTERN.toString());
+    expect(manifestSchema.semanticVersion).toBe(SEMVER_PATTERN.toString());
+  });
+
+  it('contributes 允许类型与权限白名单与校验器一致', () => {
+    expect(manifestSchema.contributesTypes).toEqual(CONTRIBUTE_TYPES);
+    expect(manifestSchema.permissionsLoValues).toEqual(PERMISSION_LO_CAPABILITIES);
+  });
+
+  it('每字段描述 shape 合法', () => {
+    const ALLOWED_TYPES = ['string', 'object', 'array', 'boolean'];
+    for (const rule of Object.values(manifestSchema.properties)) {
+      expect(ALLOWED_TYPES).toContain(rule.type);
+    }
+  });
+
+  it('从 SDK 统一出口导出', () => {
+    const sdk = require('../src/index.cjs');
+    expect(sdk.manifestSchema).toBe(manifestSchema);
   });
 });
 

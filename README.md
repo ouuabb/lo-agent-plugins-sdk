@@ -73,7 +73,7 @@ installed → loaded → activated → enabled → disabled → deactivated → 
 ├── AgentEventEmitter        # 事件总线
 ├── createLoFacade / LO_CAPABILITIES  # ctx.lo 接口契约(SDK 不实现,Host 注入)
 ├── createExtensionsFacade / EXTENSIONS_METHODS  # ctx.extensions 注册契约(SDK 不实现,Host 注入)
-├── validateManifest         # manifest schema 校验(engines/contributes/permissions/config)
+├── validateManifest / manifestSchema  # manifest 校验 + 独立规范描述（见 docs/manifest-spec.md）
 ├── createPlugin             # 插件类校验 + 实例化
 ├── LIFECYCLE_STATES / LIFECYCLE_TRANSITIONS / canTransition  # 生命周期契约
 ├── CAPABILITY_TYPES / PERMISSION_LO / DEFAULT_PERMISSIONS / resolvePermissions  # 能力/权限类型
@@ -146,6 +146,19 @@ registerEditor / registerService / getService / listServices），不持有 hand
 - 能力 → 权限映射见 `LO_PERMISSION_MAP`（SDK 导出）。
 - Host 在激活插件时经 `resolvePermissions(manifest.permissions)` 解析并注入
   `ctx.lo`，未授权方法透传不达 `@lo/client`。
+
+## Manifest 规范
+
+`plugin.json`（manifest）是插件 ↔ 宿主的稳定契约。完整规范见
+**[`docs/manifest-spec.md`](docs/manifest-spec.md)**（必填字段、dependsOn、contributes、
+permissions、config、完整示例）。机器可读描述由 SDK 导出：
+
+```js
+const { manifestSchema } = require('@lo/agent-plugins-sdk');
+// { $id, required, properties, contributesTypes, permissionsLoValues, ... }
+```
+
+校验入口 `validateManifest(manifest)` 与 `manifestSchema` 同源（常量复用，避免漂移）。
 
 ## 开发
 

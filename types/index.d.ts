@@ -56,6 +56,32 @@ export interface ManifestCheck {
   errors?: string[];
 }
 
+export interface ManifestFieldRule {
+  type: 'string' | 'object' | 'array' | 'boolean';
+  required?: boolean;
+  pattern?: string;
+  allowedValues?: string[];
+  allowedTypes?: string[];
+  items?: ManifestFieldRule | null;
+  properties?: Record<string, ManifestFieldRule>;
+  description?: string;
+}
+
+export interface ManifestSchema {
+  $id: string;
+  title: string;
+  version: string;
+  required: string[];
+  idPattern: string;
+  semanticVersion: string;
+  contributesTypes: string[];
+  permissionsLoValues: string[];
+  properties: Record<string, ManifestFieldRule>;
+}
+
+export const manifestSchema: ManifestSchema;
+export function validateManifest(manifest: unknown): ManifestCheck;
+
 // ── 日志 ──
 
 export interface LoggerLike {
@@ -294,8 +320,6 @@ export class AgentPlugin {
 // ── 加载 ──
 
 export function createPlugin(PluginClass: unknown): AgentPlugin;
-export function validateManifest(manifest: unknown): ManifestCheck;
-
 export const SDK_VERSION: string;
 export const REQUIRED_FIELDS: string[];
 export const ID_PATTERN: RegExp;

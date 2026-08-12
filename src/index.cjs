@@ -23,6 +23,7 @@ const { createExtensionsFacade, EXTENSIONS_METHODS } = require('./extensions-fac
 const AgentEventEmitter = require('./AgentEventEmitter.cjs');
 const {
   validateManifest,
+  manifestSchema,
   REQUIRED_FIELDS,
   ID_PATTERN,
   SEMVER_PATTERN,
@@ -64,6 +65,7 @@ module.exports = {
 
   // manifest
   validateManifest,
+  manifestSchema,
   REQUIRED_FIELDS,
   ID_PATTERN,
   SEMVER_PATTERN,
