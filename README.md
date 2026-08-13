@@ -147,6 +147,14 @@ registerEditor / registerService / getService / listServices），不持有 hand
 - Host 在激活插件时经 `resolvePermissions(manifest.permissions)` 解析并注入
   `ctx.lo`，未授权方法透传不达 `@lo/client`。
 
+## 延迟激活（activationEvents）
+
+插件可声明 `manifest.activationEvents` 选择**延迟激活**：仅含 `onCommand:<id>` /
+`onView:<id>` / `onPanel:<id>` / `onEditor:<id>` 触发点的插件启动不激活，宿主在首次
+执行对应命令 / 渲染对应视图时才激活；`onStartup` / `*` 或未声明 → 启动激活。
+语法校验见 `manifestSchema.activationEventPrefixes`，契约细节见
+[`docs/manifest-spec.md`](docs/manifest-spec.md) §3.1。
+
 ## 渲染端 UI（mountEl）
 
 插件可声明 `manifest.ui`（渲染端入口，单文件自包含 ESM）提供交互式 UI：宿主在渲染进程
