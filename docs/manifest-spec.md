@@ -73,6 +73,23 @@
 
 消费者对 `ctx.extensions.getService(id)` 返回值仍需判空：提供者可能未激活 / 被停用。
 
+## 3.1 延迟激活（activationEvents）
+
+```json
+"activationEvents": ["onCommand:demo-hello.hello", "onView:demo-hello.status"]
+```
+
+| 规则 | 说明 |
+|---|---|
+| 类型 | string 数组，元素为触发点 |
+| 触发点 | `onStartup` / `*`（启动激活）、`onCommand:<id>` / `onView:<id>` / `onPanel:<id>` / `onEditor:<id>`（按需延迟激活） |
+| 语义 | 无 `activationEvents` 或含 `onStartup`/`*` → 启动时激活；仅含 `onCommand`/`onView`/`onPanel`/`onEditor` → **延迟激活**：宿主在首次执行对应命令 / 渲染对应视图时才激活 |
+| 禁止 | 非法触发点（如 `onService:<id>`）校验报错 |
+
+- 延迟激活的插件在激活前，其命令/视图等扩展点未注册；宿主在能力调用缺失时按触发点激活后重试。
+- `manifest.dependsOn` 声明的硬依赖会在依赖方激活时强制先激活（即使被依赖方声明了延迟激活）。
+- 服务（services）不参与延迟激活触发：服务提供方应保持启动激活或依赖 `dependsOn` 强制。
+
 ## 4. contributes —— 扩展点声明
 
 `contributes` 是**纯数据声明**，供宿主发现/展示；实际 handler / render / api 在激活期

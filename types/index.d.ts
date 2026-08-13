@@ -19,6 +19,14 @@ export interface ManifestEngines {
   core?: string;
 }
 
+export type ActivationEvent =
+  | 'onStartup'
+  | '*'
+  | `onCommand:${string}`
+  | `onView:${string}`
+  | `onPanel:${string}`
+  | `onEditor:${string}`;
+
 export interface ManifestContributes {
   commands?: Array<{ id: string; title?: string; handler?: (...args: unknown[]) => unknown }>;
   views?: Array<{ id: string; title?: string; type?: 'panel' | 'sidebar' | 'editor' }>;
@@ -45,7 +53,7 @@ export interface AgentManifest {
   engines?: ManifestEngines;
   dependsOn?: string[];
   ui?: string;
-  activationEvents?: string[];
+  activationEvents?: ActivationEvent[];
   contributes?: ManifestContributes;
   permissions?: ManifestPermissions;
   config?: ManifestConfigSchema;
@@ -77,11 +85,14 @@ export interface ManifestSchema {
   semanticVersion: string;
   contributesTypes: string[];
   permissionsLoValues: string[];
+  activationEventPrefixes: string[];
   properties: Record<string, ManifestFieldRule>;
 }
 
 export const manifestSchema: ManifestSchema;
 export function validateManifest(manifest: unknown): ManifestCheck;
+
+export const ACTIVATION_TRIGGER_PREFIXES: string[];
 
 // ── 日志 ──
 

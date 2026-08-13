@@ -101,6 +101,12 @@ describe('manifestSchema（独立规范描述，与校验器同源）', () => {
     expect(manifestSchema.permissionsLoValues).toEqual(PERMISSION_LO_CAPABILITIES);
   });
 
+  it('activationEvents 前缀与 schema 一致', () => {
+    const { ACTIVATION_TRIGGER_PREFIXES } = require('../src/validateManifest.cjs');
+    expect(manifestSchema.activationEventPrefixes).toEqual(ACTIVATION_TRIGGER_PREFIXES);
+    expect(ACTIVATION_TRIGGER_PREFIXES).toEqual(['onCommand', 'onView', 'onPanel', 'onEditor']);
+  });
+
   it('每字段描述 shape 合法', () => {
     const ALLOWED_TYPES = ['string', 'object', 'array', 'boolean'];
     for (const rule of Object.values(manifestSchema.properties)) {
@@ -148,6 +154,18 @@ describe('manifest 扩展字段', () => {
   it('activationEvents 必须是数组', () => {
     expect(validateManifest({ ...base, activationEvents: ['onView:x'] }).ok).toBe(true);
     expect(validateManifest({ ...base, activationEvents: 'bad' }).ok).toBe(false);
+  });
+
+  it('activationEvents 触发点语法校验（onStartup/*/onCommand/onView/onPanel/onEditor）', () => {
+    expect(validateManifest({ ...base, activationEvents: ['onStartup'] }).ok).toBe(true);
+    expect(validateManifest({ ...base, activationEvents: ['*'] }).ok).toBe(true);
+    expect(validateManifest({ ...base, activationEvents: ['onCommand:demo-x.open'] }).ok).toBe(true);
+    expect(validateManifest({ ...base, activationEvents: ['onView:demo-x.panel', 'onEditor:demo-x.note'] }).ok).toBe(true);
+    // 非法触发点
+    expect(validateManifest({ ...base, activationEvents: ['onService:x'] }).ok).toBe(false);
+    expect(validateManifest({ ...base, activationEvents: ['whatever'] }).ok).toBe(false);
+    expect(validateManifest({ ...base, activationEvents: ['onCommand:'] }).ok).toBe(false);
+    expect(validateManifest({ ...base, activationEvents: [123] }).ok).toBe(false);
   });
 
   it('dependsOn 必须是合法插件 ID 数组', () => {

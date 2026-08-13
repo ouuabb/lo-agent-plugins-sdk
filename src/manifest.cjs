@@ -32,6 +32,12 @@ const PERMISSION_LO_CAPABILITIES = [
   'health.read',
 ];
 
+/** activationEvents 触发点前缀（延迟激活触发类型） */
+const ACTIVATION_TRIGGER_PREFIXES = ['onCommand', 'onView', 'onPanel', 'onEditor'];
+const ACTIVATION_TRIGGER_PATTERN = new RegExp(
+  `^(?:\\*|onStartup|(?:${ACTIVATION_TRIGGER_PREFIXES.join('|')}):[^\\s]+)$`,
+);
+
 /**
  * manifestSchema —— Manifest 规范的机器可读描述
  *
@@ -48,6 +54,7 @@ const manifestSchema = {
   semanticVersion: SEMVER_PATTERN.toString(),
   contributesTypes: [...CONTRIBUTE_TYPES],
   permissionsLoValues: [...PERMISSION_LO_CAPABILITIES],
+  activationEventPrefixes: [...ACTIVATION_TRIGGER_PREFIXES],
   properties: {
     id: {
       type: 'string',
@@ -86,7 +93,7 @@ const manifestSchema = {
     activationEvents: {
       type: 'array',
       items: { type: 'string' },
-      description: '延迟激活触发点（如 onView:<id> / onCommand:<id>）',
+      description: '延迟激活触发点：onStartup / *（启动激活）或 onCommand:<id> / onView:<id> / onPanel:<id> / onEditor:<id>',
     },
     contributes: {
       type: 'object',
@@ -164,6 +171,15 @@ function validateManifest(manifest) {
     !Array.isArray(manifest.activationEvents)
   ) {
     errors.push('manifest.activationEvents 必须是字符串数组');
+  } else if (Array.isArray(manifest.activationEvents)) {
+    for (const ev of manifest.activationEvents) {
+      if (typeof ev !== 'string' || !ACTIVATION_TRIGGER_PATTERN.test(ev)) {
+        errors.push(
+          `manifest.activationEvents 含非法触发点 "${ev}"（支持 onStartup / * / ` +
+            `${ACTIVATION_TRIGGER_PREFIXES.map((p) => `${p}:<id>`).join(' / ')}）`,
+        );
+      }
+    }
   }
 
   if (manifest.dependsOn !== undefined) {
@@ -249,4 +265,6 @@ module.exports = {
   SEMVER_PATTERN,
   CONTRIBUTE_TYPES,
   PERMISSION_LO_CAPABILITIES,
+  ACTIVATION_TRIGGER_PREFIXES,
+  ACTIVATION_TRIGGER_PATTERN,
 };
