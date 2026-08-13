@@ -41,6 +41,23 @@
 | `engines.agent` | string | lo-agent 版本约束（如 `>=0.1.0`） |
 | `engines.core` | string | lo Core 版本约束（如 `>=0.1.0`） |
 
+### 2.1 渲染端入口（ui）
+
+```json
+"ui": "ui/index.mjs"
+```
+
+| 规则 | 说明 |
+|---|---|
+| 类型 | string，相对插件目录的渲染端入口文件 |
+| 形态 | **单文件自包含 ESM（.mjs）**，不 import 任何包；宿主在渲染进程 isolated world 中加载 |
+| 契约 | 模块导出 `{ views?, panels?, editors? }`，`id → { render(mountEl, ctx) }`（见 §9） |
+| 无 `ui` 插件 | 走 HTML 快照渲染（`ctx.extensions.registerView` 的 render 返回 HTML 字符串） |
+| 有 `ui` 插件 | 走 mountEl 渲染：`render(mountEl, ctx)` 在渲染进程挂载真实 DOM |
+
+`ui` 是**渲染端 UI** 声明，与主进程入口 `main` 相互独立：插件逻辑仍跑在主进程
+（`main` + `ctx.lo`），`ui` 仅提供交互界面。
+
 ## 3. 依赖（dependsOn）
 
 ```json
@@ -198,3 +215,51 @@ health.read
 
 SDK 版本兼容：`engineVersion` / `@lo/client` peer 依赖由宿主注入，manifest 本身口径见
 本文件。
+
+## 9. 渲染端入口（mountEl UI）
+
+声明 `ui` 的插件在**渲染进程**提供交互 UI。渲染模型有两种，按是否声明 `ui` 选择：
+
+| 模式 | 触发 | 渲染位置 | 能力 |
+|---|---|---|---|
+| HTML 快照 | 未声明 `ui` | 主进程 `render(context, ctx) → HTML 字符串` → 渲染进程承载 | 静态快照 |
+| **mountEl** | 声明 `ui` | 渲染进程 `render(mountEl, ctx) → 真实 DOM` | 交互式 UI |
+
+### 9.1 ui 模块契约
+
+`ui` 指向**单文件自包含 ESM**，导出：
+
+```js
+export const views = {
+  'demo-hello.status': {
+    render: async (mountEl, ctx) => {
+      const btn = document.createElement('button');
+      btn.textContent = '获取状态';
+      btn.addEventListener('click', async () => {
+        const stats = await ctx.lo.health.stats();
+        mountEl.append('资源: ' + stats.totalResources);
+      });
+      mountEl.appendChild(btn);
+      return () => { mountEl.replaceChildren(); }; // 可选：清理函数
+    },
+  },
+};
+export const panels = {};
+export const editors = {};
+```
+
+- 导出 `{ views?, panels?, editors? }`，`id` 与 `contributes` / 运行时注册的扩展点一致。
+- `render(mountEl, ctx)`：`mountEl` 为宿主导入的 DOM 容器（共享 document），可返回
+  清理函数（或 `{ dispose }`，支持 async）；宿主在关闭/停用时于同一 isolated world
+  内调用，**不跨 world 持有函数引用**。
+- `ctx` 为插件作用域能力入口：`{ pluginId, lo, config, executeCommand, notify }`；
+  `ctx.lo` 与主进程插件契约一致（见 §4/§5），能力经 `agent-plugins:ctx` 通道代理到
+  主进程插件的 `PluginContext.lo` facade（Phase B 权限裁决）。
+- **安全模型（G2）**：ui 模块在 Electron **isolated world**（宿主分配 worldId）中执行，
+  与 App 主 world 隔离——插件 UI **不可访问** `window.loAgent.loCore`、`window.loAgent`
+  及任何 App/Host 内部对象；`ctx` 是唯一能力入口；主进程 facade 是权限最终裁决。
+- **边界**：G2 只保证 **JS 执行上下文隔离**，不保证 DOM 内容隔离——插件 UI 与 App 共享
+  同一 document，可读取页面 DOM。插件**不得**依赖远程模块（isolated world 拒绝远程
+  `import()`）。
+- **模块约束**：单文件、自包含、不 import 包；宿主以 `import(blob:)` 在 isolated world
+  加载。

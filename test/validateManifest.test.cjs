@@ -162,6 +162,12 @@ describe('manifest 扩展字段', () => {
     expect(self.errors.join()).toContain('自身');
   });
 
+  it('ui 必须是字符串（渲染端入口）', () => {
+    expect(validateManifest({ ...base, ui: 'ui/index.mjs' }).ok).toBe(true);
+    expect(validateManifest({ ...base, ui: 123 }).ok).toBe(false);
+    expect(validateManifest({ ...base, ui: { main: 'ui/index.mjs' } }).ok).toBe(false);
+  });
+
   it('contributes 只允许已知类型', () => {
     expect(
       validateManifest({ ...base, contributes: { commands: [], views: [] } }).ok,

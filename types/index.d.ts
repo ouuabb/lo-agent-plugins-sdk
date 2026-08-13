@@ -44,6 +44,7 @@ export interface AgentManifest {
   agentVersion?: string;
   engines?: ManifestEngines;
   dependsOn?: string[];
+  ui?: string;
   activationEvents?: string[];
   contributes?: ManifestContributes;
   permissions?: ManifestPermissions;
@@ -209,6 +210,32 @@ export interface ExtensionsFacade {
   registerService(def: ServiceDef): unknown;
   getService(id: string): ServiceApi | null;
   listServices(): Array<Omit<AgentService, 'api'>>;
+}
+
+// ── 渲染端入口（mountEl UI）──
+// manifest.ui 指向的 ESM 单文件（渲染进程 isolated world 中执行）。
+// 导出 { views?, panels?, editors? }；render(mountEl, ctx) 挂载真实 DOM，
+// 可返回清理函数（或 { dispose }）。ctx 为插件作用域能力入口。
+
+export interface PluginUiCtx {
+  pluginId: string;
+  lo: LoFacade;
+  config(key?: string, defaultValue?: unknown): unknown;
+  executeCommand(commandId: string, args?: unknown[]): Promise<unknown>;
+  notify(message: string): void;
+}
+
+export interface UiMount {
+  render(
+    mountEl: Element,
+    ctx: PluginUiCtx,
+  ): void | (() => void) | Promise<void | (() => void)>;
+}
+
+export interface PluginUiModule {
+  views?: Record<string, UiMount>;
+  panels?: Record<string, UiMount>;
+  editors?: Record<string, UiMount>;
 }
 
 export const EXTENSIONS_METHODS: string[];

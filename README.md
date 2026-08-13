@@ -147,6 +147,18 @@ registerEditor / registerService / getService / listServices），不持有 hand
 - Host 在激活插件时经 `resolvePermissions(manifest.permissions)` 解析并注入
   `ctx.lo`，未授权方法透传不达 `@lo/client`。
 
+## 渲染端 UI（mountEl）
+
+插件可声明 `manifest.ui`（渲染端入口，单文件自包含 ESM）提供交互式 UI：宿主在渲染进程
+isolated world 加载它，调用 `render(mountEl, ctx)` 挂载真实 DOM（替代 HTML 快照模式）。
+
+- `ctx` 为插件作用域能力入口（`{ pluginId, lo, config, executeCommand, notify }`）；
+  `ctx.lo` 与主进程插件契约一致，能力经 `agent-plugins:ctx` 代理到主进程
+  `PluginContext.lo` facade（权限不变）。
+- 安全：ui 运行在 isolated world，不可访问 `window.loAgent.loCore` / App 内部对象；
+  仅保证 JS 上下文隔离，不保证 DOM 内容隔离。
+- 契约细节见 [`docs/manifest-spec.md`](docs/manifest-spec.md) §9。
+
 ## Manifest 规范
 
 `plugin.json`（manifest）是插件 ↔ 宿主的稳定契约。完整规范见

@@ -9,6 +9,7 @@
  *   description / author              —— 可选元信息
  *   engines: { agent, core }          —— 版本约束
  *   dependsOn: [...]                  —— 依赖插件 ID（激活顺序：提供者先于消费者）
+ *   ui                                —— 渲染端入口（mountEl UI，可选）
  *   activationEvents: [...]           —— 延迟激活触发点
  *   contributes: { commands, views, panels, editors, services }
  *   permissions: { lo, storage, network, shell }
@@ -77,6 +78,10 @@ const manifestSchema = {
       type: 'array',
       items: { type: 'string', pattern: ID_PATTERN.toString() },
       description: '依赖插件 ID 列表（激活顺序：提供者先于消费者；不得依赖自身）',
+    },
+    ui: {
+      type: 'string',
+      description: '渲染端入口（mountEl UI）：单文件自包含 ESM，相对插件目录，如 ui/index.mjs',
     },
     activationEvents: {
       type: 'array',
@@ -174,6 +179,10 @@ function validateManifest(manifest) {
         }
       }
     }
+  }
+
+  if (manifest.ui !== undefined && typeof manifest.ui !== 'string') {
+    errors.push('manifest.ui 必须是字符串（渲染端入口文件，相对插件目录）');
   }
 
   if (manifest.contributes !== undefined) {
